@@ -1,6 +1,6 @@
 # Tushare API 配置
 tushare:
-  token: "7cbf5d4819d7ea10444f608a99b30ba60050578fd2aafa0e7e7b20b8"  # 在 https://tushare.pro 注册获取
+  token: "xxxxxxxxxx"  # 在 https://tushare.pro 注册获取
   base_url: "http://api.tushare.pro"
   timeout: 30  # 请求超时时间（秒）
   retry: 3     # 失败重试次数
@@ -10,8 +10,8 @@ database:
   type: "postgres"  # postgres 或 mysql
   host: "localhost"
   port: 5432
-  user: "liyao"
-  password: "lY@940710"
+  user: "xxxxxx"
+  password: "xxxxxxx"
   dbname: "stock"
   max_open_conns: 100
   max_idle_conns: 10
