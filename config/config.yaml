@@ -1,6 +1,6 @@
 # Tushare API 配置
 tushare:
-  token: "xxxxxxxxxxxxxxxxxxxxxxxxxxx"  # 在 https://tushare.pro 注册获取
+  token: "7cbf5d4819d7ea10444f608a99b30ba60050578fd2aafa0e7e7b20b8"  # 在 https://tushare.pro 注册获取
   base_url: "http://api.tushare.pro"
   timeout: 30  # 请求超时时间（秒）
   retry: 3     # 失败重试次数
@@ -10,9 +10,9 @@ database:
   type: "postgres"  # postgres 或 mysql
   host: "localhost"
   port: 5432
-  user: "xxxxx"
-  password: "xxxx"
-  dbname: "xxxx"
+  user: "liyao"
+  password: "lY@940710"
+  dbname: "stock"
   max_open_conns: 100
   max_idle_conns: 10
   conn_max_lifetime: 3600  # 秒
@@ -23,15 +23,6 @@ server:
   mode: "debug"  # debug, release, test
 
 
-# 数据抓取配置
-fetcher:
-  concurrency: 10        # 并发数
-  batch_size: 1000       # 批量插入大小
-  rate_limit: 200        # 每分钟请求限制
-  start_date: "20200101" # 默认开始日期
-  end_date: "20231231"   # 默认结束日期
-
-
 # 日志配置
 log:
   level: "info"  # debug, info, warn, error
@@ -40,3 +31,11 @@ log:
   max_backups: 10
   max_age: 30         # 天
   compress: true
+
+# 数据抓取配置
+fetcher:
+  concurrency: 10        # 并发数
+  batch_size: 1000       # 批量插入大小
+  rate_limit: 200        # 每分钟请求限制
+  start_date: "20200101" # 默认开始日期
+  end_date: "20231231"   # 默认结束日期

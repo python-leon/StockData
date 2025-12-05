@@ -771,65 +771,9 @@ func (f *DataFetcher) FetchMonthlyData(ctx context.Context, startDate, endDate s
 	return task, nil
 }
 
-// 通过调用Tushare交易日历接口获取真实的交易日，并找出每月最后一个交易日
+// generateMonthEndDates 生成月末日期列表（每月最后一天）
+// Tushare月线接口会自动返回最后一个交易日的数据，所以只需传入每月最后一天即可
 func (f *DataFetcher) generateMonthEndDates(startDate, endDate string) []string {
-	start, _ := time.Parse("20060102", startDate)
-	end, _ := time.Parse("20060102", endDate)
-
-	var dates []string
-
-	// 首先尝试调用Tushare交易日历接口获取真实交易日
-	tradeCals, err := f.tushareClient.GetTradeCal(startDate, endDate, 1) // 1表示只获取交易日
-	if err != nil {
-		f.logger.Warn("获取交易日历失败，使用降级方案（排除周末）",
-			zap.Error(err))
-		return f.generateMonthEndDatesFallback(startDate, endDate)
-	}
-
-	if len(tradeCals) == 0 {
-		f.logger.Warn("交易日历为空，使用降级方案")
-		return f.generateMonthEndDatesFallback(startDate, endDate)
-	}
-
-	// 按月份分组，找出每月最后一个交易日
-	monthlyLastTrade := make(map[string]string) // key: YYYYMM, value: 最后一个交易日
-
-	for _, cal := range tradeCals {
-		if cal.IsOpen == 1 {
-			// 提取年月 YYYYMM
-			if len(cal.CalDate) >= 6 {
-				yearMonth := cal.CalDate[:6]
-				// 保留每月最大的日期（最后一个交易日）
-				if existing, ok := monthlyLastTrade[yearMonth]; !ok || cal.CalDate > existing {
-					monthlyLastTrade[yearMonth] = cal.CalDate
-				}
-			}
-		}
-	}
-
-	// 按时间顺序排序并生成日期列表
-	current := time.Date(start.Year(), start.Month(), 1, 0, 0, 0, 0, start.Location())
-	for !current.After(end) {
-		yearMonth := current.Format("200601")
-		if lastTradeDate, ok := monthlyLastTrade[yearMonth]; ok {
-			dates = append(dates, lastTradeDate)
-			f.logger.Debug("找到月末交易日",
-				zap.String("year_month", yearMonth),
-				zap.String("last_trade_date", lastTradeDate))
-		}
-		// 移动到下个月
-		current = current.AddDate(0, 1, 0)
-	}
-
-	f.logger.Info("生成月末交易日列表完成",
-		zap.Int("total_months", len(dates)),
-		zap.Strings("dates", dates))
-
-	return dates
-}
-
-// generateMonthEndDatesFallback 降级方案：简单排除周末
-func (f *DataFetcher) generateMonthEndDatesFallback(startDate, endDate string) []string {
 	start, _ := time.Parse("20060102", startDate)
 	end, _ := time.Parse("20060102", endDate)
 
@@ -847,22 +791,21 @@ func (f *DataFetcher) generateMonthEndDatesFallback(startDate, endDate string) [
 			monthEnd = end
 		}
 
-		// 如果月末不是交易日（周末），回退到最后一个周五
-		switch monthEnd.Weekday() {
-		case time.Saturday:
-			monthEnd = monthEnd.AddDate(0, 0, -1) // 周六退1天到周五
-		case time.Sunday:
-			monthEnd = monthEnd.AddDate(0, 0, -2) // 周日退2天到周五
-		}
-
 		// 确保不早于开始日期
 		if !monthEnd.Before(start) {
 			dates = append(dates, monthEnd.Format("20060102"))
+			f.logger.Debug("生成月末日期",
+				zap.String("year_month", current.Format("200601")),
+				zap.String("month_end_date", monthEnd.Format("20060102")))
 		}
 
 		// 移动到下个月
 		current = current.AddDate(0, 1, 0)
 	}
+
+	f.logger.Info("生成月末日期列表完成",
+		zap.Int("total_months", len(dates)),
+		zap.Strings("dates", dates))
 
 	return dates
 }
